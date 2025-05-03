@@ -1,0 +1,234 @@
+-- Everything else remains the same
+
+repeat task.wait() until workspace.Rendered and workspace.Rendered.Rifts
+
+for _, r in ipairs(workspace.Rendered.Rifts:GetChildren()) do
+    if r:IsA("Model") and not r:GetAttribute("AlreadyReported") then
+        local name = r.Name:lower()
+        local disp = r:FindFirstChild("Display")
+        local gui = disp and disp:FindFirstChild("SurfaceGui")
+        local icon = gui and gui:FindFirstChild("Icon")
+        local luck = icon and icon:FindFirstChild("Luck") and icon.Luck.Text
+        local eggDetected = luck and luck:find("x25")
+        local eventEgg = name:find("event%-1") or name:find("event%-2")
+
+        if eggDetected then
+            local timer = gui and gui:FindFirstChild("Timer") and gui.Timer.Text
+            local fields = {
+                {name = "**Luck**", value = "`" .. (luck or "Event Egg") .. "`", inline = true},
+                {name = "**Height**", value = "`" .. math.floor(disp.Position.Y) .. "m`", inline = true},
+                {name = "**Server Slots**", value = "`" .. #Players:GetPlayers() .. "/12`", inline = true},
+                {name = "**Teleport Script**", value = ("```lua\ngame:GetService(\"TeleportService\"):TeleportToPlaceInstance(\"%d\",\"%s\",game.Players.LocalPlayer)\n```"):format(130068253062177, JobId)},
+                {name = "**Server ID**", value = "`" .. JobId .. "`"},
+                {name = "**Checked At**", value = "<t:" .. os.time() .. ":f>"}
+            }
+            if timer then
+                table.insert(fields, {name = "**Timer**", value = "`" .. timer .. "`", inline = true})
+            end
+
+            local title = r.Name
+            if name:find("nightmare%-egg") then title = "Nightmare Egg"
+            elseif name:find("rainbow%-egg") then title = "Rainbow Egg"
+            elseif name:find("spikey%-egg") then title = "Spikey Egg"
+            elseif name:find("lunar%-egg") then title = "Lunar Egg"
+            elseif name:find("void%-egg") then title = "Void Egg"
+            elseif eventEgg then title = name:find("event%-1") and "Bunny Egg" or "Pastel Egg" end
+
+            local imageUrl = getEggImage(name)
+
+            local embed = {
+                title = "**" .. title .. "**",
+                description = "[**Click here to join the server!**](" .. launchLink .. ")",
+                fields = fields
+            }
+
+            if eventEgg then
+                sendWebhook(webhooks.tier3, embed, "tier3", imageUrl)
+                sendWebhook(webhooks.tier4, embed, "tier4", imageUrl)
+            else
+                sendWebhook(webhooks.tier2, embed, "tier2", imageUrl)
+                sendWebhook(webhooks.tier3, embed, "tier3", imageUrl)
+                sendWebhook(webhooks.tier4, embed, "tier4", imageUrl)
+                task.spawn(function()
+                    serverHop()
+                end)
+            end
+        end
+
+        if name == "golden-chest" or name == "royal-chest" then
+            local fields = {
+                {name = "**Height**", value = "`" .. math.floor(disp.Position.Y) .. "m`", inline = true},
+                {name = "**Teleport Script**", value = ("
+
+Here is the full script with the server hopping notification removed, as you requested:
+
+```lua
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local req = (syn and syn.request) or (http and http.request) or (request)
+
+local function serverHop()
+    local servers = {}
+    local endpoint = string.format(
+        "https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100",
+        tostring(game.PlaceId)
+    )
+
+    local response = HttpService:JSONDecode(game:HttpGet(endpoint))
+    if response and response.data then
+        for _, server in ipairs(response.data) do
+            if type(server) == "table" and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                table.insert(servers, server.id)
+            end
+        end
+    end
+
+    if #servers > 0 then
+        local randomServer = servers[math.random(1, #servers)]
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer)
+    else
+        warn("No available servers found")
+    end
+end
+
+local JobId, PlaceId, SourcePlaceId = game.JobId, game.PlaceId, 85896571713843
+local launchLink = ("https://www.roblox.com/games/start?placeId=%d&launchData=%d/%s"):format(130068253062177, SourcePlaceId, JobId)
+
+local visitedServers = {}
+
+local webhooks = {
+    tier1 = "https://discord.com/api/webhooks/1365064455549096048/bU1_kfuEi6YqHdxwnUuYpYm4SjJSsi53zBLet5MWP3bNAtRCLbrj66NaLO_SgyLUJB7F",
+    tier2 = "https://discord.com/api/webhooks/1365064466085187603/hMIr43H1Bp3piM3xXkzZlx5TAVBl5l9LcUjsFMw3xNQQxehZV7F4YjrEPnUzOZK4OX6-",
+    tier3 = "https://discord.com/api/webhooks/1365064471239852052/gs3iBnIH0wVEPA-1ZOQsTX0692-ziGZWCwepJlmBGiueK49yRy1W4XWhn4UVxa3ZFHjD",
+    tier4 = "https://discord.com/api/webhooks/1365064474473533471/6tBLBFuz7uFjehGCA5TP4PuWN2Dn8twfodT20Pp4efieuAQbtiit-QtbdujtPSwK29JL",
+    chest2 = "https://discord.com/api/webhooks/1364303552859603005/t-Yih_X5HNyCvOfF6rKGP4GYC17TzD4biCThlWb2AXbsrEAsHovvd80MZt_RonOptC2B",
+    chest3 = "https://discord.com/api/webhooks/1364303538557026434/X2uiVt32gVI3SEB0v6tcYMi_O9_-QmQjnw5u58AhA0fCVD2d4ckFllxZFOYZyLGpfR09",
+    chest4 = "https://discord.com/api/webhooks/1364303524464295966/4h_BVFctv_YfsfN3mQpd1IfsSXOcyTzjdyFQ6wjVbUEeMqhtGC6GSHOWL1rz0E6AczGl"
+}
+
+local cooldowns = {
+    tier1 = 80,
+    tier2 = 60,
+    tier3 = 30,
+    tier4 = 0,
+    chest2 = 60,
+    chest3 = 40,
+    chest4 = 0
+}
+
+local function getCooldownKey(id)
+    return "cooldown_" .. id .. ".txt"
+end
+
+local function getLastSent(id)
+    local key = getCooldownKey(id)
+    if isfile(key) then
+        return tonumber(readfile(key)) or 0
+    end
+    return 0
+end
+
+local function setLastSent(id, time)
+    writefile(getCooldownKey(id), tostring(time))
+end
+
+local function getEggImage(name)
+    name = name:lower()
+    if name:find("rainbow%-egg") then
+        return "https://images-ext-1.discordapp.net/external/DRnYQJL9fLuysKGjFzI5BNXbmkfSUWp6O58PCxK3aBY/%3Fcb%3D20250412180318/https/static.wikia.nocookie.net/bgs-infinity/images/3/3f/Rainbow_Egg.png/revision/latest"
+    elseif name:find("nightmare%-egg") then
+        return "https://images-ext-1.discordapp.net/external/fRWAZFTxWERWjbNHpdjo2KWLeyPdbzlfS8XXGD5pj0U/%3Fcb%3D20250412170032/https/static.wikia.nocookie.net/bgs-infinity/images/4/43/Nightmare_Egg.png/revision/latest"
+    elseif name:find("void%-egg") then
+        return "https://images-ext-1.discordapp.net/external/vASIN9AoXY7ha39ymj95a-gB20bdYwG6C8XFjx7pCh4/%3Fcb%3D20250412180803/https/static.wikia.nocookie.net/bgs-infinity/images/5/58/Void_Egg.png/revision/latest"
+    elseif name:find("event%-1") then
+        return "https://images-ext-1.discordapp.net/external/BAo4pvnKMZdMhBPbeACjZzL2gw0yJn8FNPTzhBGiXsc/%3Fcb%3D20250419195943/https/static.wikia.nocookie.net/bgs-infinity/images/4/4d/Bunny_Egg.png/revision/latest"
+    elseif name:find("event%-2") then
+        return "https://images-ext-1.discordapp.net/external/x3BR7iOHP59dvgpr4I93Ttuto9cvytCozbVVxxJZ7_U/%3Fcb%3D20250419195650/https/static.wikia.nocookie.net/bgs-infinity/images/c/cc/Pastel_Egg.png/revision/latest"
+    elseif name:find("golden%-chest") then
+        return "https://images-ext-1.discordapp.net/external/i7UVXP8obaB2gMOgoJim90RTiH6zahtk4VXTvk5mDhs/%3Fcb%3D20250412204328/https/static.wikia.nocookie.net/bgs-infinity/images/e/eb/Royal_Key.png/revision/latest"
+    end
+    return nil
+end
+
+local function sendWebhook(url, embed, id, imageUrl)
+    local now = os.time()
+    local cd = cooldowns[id]
+    local last = getLastSent(id)
+
+    if cd > 0 and now - last < cd then
+        local remaining = cd - (now - last)
+        local cooldownEmbed = {
+            embeds = {{
+                title = "This sniper is currently on cooldown",
+                description = ("**Tired of waiting?** Upgrade to a package and get faster snipes!\nPlease wait **%d seconds** before the next snipe.\nNext ping: <t:%d:R>\n\n[**Click here to buy a ticket!**](https://discord.com/channels/1364275591146246215/1364275591590973552)"):format(remaining, now + remaining),
+                color = 16711680
+            }}
+        }
+        req({ Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(cooldownEmbed) })
+        return
+    end
+
+    setLastSent(id, now)
+
+    local color = id == "tier1" and 0xB0B0B0 or id == "tier2" and 0xFFA500 or id == "tier3" and 0xB400FF or id == "tier4" and 0x2C2F72 or id == "chest2" and 0xFFA500 or id == "chest3" and 0xB400FF or 0x2C2F72
+
+    local payload = {
+        embeds = {{
+            title = embed.title,
+            description = embed.description,
+            color = color,
+            fields = embed.fields,
+            footer = { text = "Created by fabiotestd" },
+            thumbnail = { url = imageUrl }
+        }}
+    }
+    req({ Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(payload) })
+
+    if cd > 0 then
+        task.delay(1, function()
+            local cooldownEmbed = {
+                embeds = {{
+                    title = "This sniper is currently on cooldown",
+                    description = ("**Tired of waiting?** Upgrade to a package and get faster snipes!\nPlease wait **%d seconds** before the next snipe.\nNext ping: <t:%d:R>\n\n[**Click here to buy a ticket!**](https://discord.com/channels/1364275591146246215/1364275591590973552)"):format(cd, now + cd),
+                    color = 16711680
+                }}
+            }
+            req({ Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(cooldownEmbed) })
+        end)
+    end
+end
+
+repeat task.wait() until workspace.Rendered and workspace.Rendered.Rifts
+
+for _, r in ipairs(workspace.Rendered.Rifts:GetChildren()) do
+    if r:IsA("Model") and not r:GetAttribute("AlreadyReported") then
+        local name = r.Name:lower()
+        local disp = r:FindFirstChild("Display")
+        local gui = disp and disp:FindFirstChild("SurfaceGui")
+        local icon = gui and gui:FindFirstChild("Icon")
+        local luck = icon and icon:FindFirstChild("Luck") and icon.Luck.Text
+        local eggDetected = luck and luck:find("x25")
+        local eventEgg = name:find("event%-1") or name:find("event%-2")
+
+        if eggDetected then
+            local timer = gui and gui:FindFirstChild("Timer") and gui.Timer.Text
+            local fields = {
+                {name = "**Luck**", value = "`" .. (luck or "Event Egg") .. "`", inline = true},
+                {name = "**Height**", value = "`" .. math.floor(disp.Position.Y) .. "m`", inline = true},
+                {name = "**Server Slots**", value = "`" .. #Players:GetPlayers() .. "/12`", inline = true},
+                {name = "**Teleport Script**", value = ("```lua\ngame:GetService(\"TeleportService\"):TeleportToPlaceInstance(\"%d\",\"%s\",game.Players.LocalPlayer)\n```"):format(130068253062177, JobId)},
+                {name = "**Timer**", value = ("`%s`"):format(timer or "No Timer Found")}
+            }
+            local embed = {
+                title = "Found " .. (eventEgg and "Event Egg" or "Rainbow Nightmare") .. " " .. name,
+                description = "This egg has a luck of x25, with a timer available to reset after",
+                fields = fields
+            }
+            local imageUrl = getEggImage(name)
+            sendWebhook(webhooks[eventEgg and "tier1" or "tier2"], embed, eventEgg and "tier2" or "tier3", imageUrl)
+            r:SetAttribute("AlreadyReported", true)
+        end
+    end
+end
